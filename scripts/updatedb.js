@@ -2,29 +2,29 @@
 
 'use strict';
 
-var user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36';
+const user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.36 Safari/537.36';
 
-var fs = require('fs');
-var https = require('https');
-var path = require('path');
-var url = require('url');
-var zlib = require('zlib');
+const fs = require('fs');
+const https = require('https');
+const path = require('path');
+const url = require('url');
+const zlib = require('zlib');
 
 fs.existsSync = fs.existsSync || path.existsSync;
 
-var async = require('async');
-var colors = require('colors');
-var glob = require('glob');
-var iconv = require('iconv-lite');
-var lazy = require('lazy');
-var rimraf = require('rimraf').sync;
-var unzip = require('unzip');
-var utils = require('../lib/utils');
+const async = require('async');
+const colors = require('colors');
+const glob = require('glob');
+const iconv = require('iconv-lite');
+const lazy = require('lazy');
+const rimraf = require('rimraf').sync;
+const unzip = require('unzip');
+const utils = require('../lib/utils');
 
-var dataPath = path.join(__dirname, '..', 'data');
-var tmpPath = path.join(__dirname, '..', 'tmp');
+const dataPath = path.join(__dirname, '..', 'data');
+const tmpPath = path.join(__dirname, '..', 'tmp');
 
-var databases = [
+const databases = [
 	{
 		type: 'country',
 		url: 'https://geolite.maxmind.com/download/geoip/database/GeoIPCountryCSV.zip',
@@ -58,7 +58,7 @@ var databases = [
 ];
 
 function mkdir(name) {
-	var dir = path.dirname(name);
+	const dir = path.dirname(name);
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir);
 	}
@@ -67,11 +67,11 @@ function mkdir(name) {
 // Ref: http://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript
 // Return array of string values, or NULL if CSV string not well formed.
 function CSVtoArray(text) {
-    var re_valid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/;
-    var re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
+    const re_valid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/;
+    const re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
     // Return NULL if input string is not well formed CSV string.
     if (!re_valid.test(text)) return null;
-    var a = [];                     // Initialize array to receive values.
+    const a = [];                     // Initialize array to receive values.
     text.replace(re_value, // "Walk" the string using replace with callback.
         function(m0, m1, m2, m3) {
             // Remove backslash from \' in single quoted values.
@@ -88,15 +88,15 @@ function CSVtoArray(text) {
 
 function fetch(database, cb) {
 
-	var downloadUrl = database.url;
-	var fileName = downloadUrl.split('/').pop();
-	var gzip = path.extname(fileName) === '.gz';
+	const downloadUrl = database.url;
+	let fileName = downloadUrl.split('/').pop();
+	const gzip = path.extname(fileName) === '.gz';
 
 	if (gzip) {
 		fileName = fileName.replace('.gz', '');
 	}
 
-	var tmpFile = path.join(tmpPath, fileName);
+	const tmpFile = path.join(tmpPath, fileName);
 
 	if (fs.existsSync(tmpFile)) {
 		return cb(null, tmpFile, fileName, database);
@@ -105,14 +105,14 @@ function fetch(database, cb) {
 	console.log('Fetching ', downloadUrl);
 
 	function getOptions() {
-		var options = url.parse(downloadUrl);
+		const options = url.parse(downloadUrl);
 		options.headers = {
 			'User-Agent': user_agent
 		};
 
 		if (process.env.http_proxy || process.env.https_proxy) {
 			try {
-				var HttpsProxyAgent = require('https-proxy-agent');
+				const HttpsProxyAgent = require('https-proxy-agent');
 				options.agent = new HttpsProxyAgent(process.env.http_proxy || process.env.https_proxy);
 			}
 			catch (e) {
@@ -125,7 +125,7 @@ function fetch(database, cb) {
 	}
 
 	function onResponse(response) {
-		var status = response.statusCode;
+		const status = response.statusCode;
 
 		if (status !== 200) {
 			console.log('ERROR'.red + ': HTTP Request Failed [%d %s]', status, https.STATUS_CODES[status]);
@@ -133,8 +133,8 @@ function fetch(database, cb) {
 			process.exit();
 		}
 
-		var tmpFilePipe;
-		var tmpFileStream = fs.createWriteStream(tmpFile);
+		let tmpFilePipe;
+		const tmpFileStream = fs.createWriteStream(tmpFile);
 
 		if (gzip) {
 			tmpFilePipe = response.pipe(zlib.createGunzip()).pipe(tmpFileStream);
@@ -150,7 +150,7 @@ function fetch(database, cb) {
 
 	mkdir(tmpFile);
 
-	var client = https.get(getOptions(), onResponse);
+	const client = https.get(getOptions(), onResponse);
 
 	process.stdout.write('Retrieving ' + fileName + ' ...');
 }
@@ -163,8 +163,8 @@ function extract(tmpFile, tmpFileName, database, cb) {
 		fs.createReadStream(tmpFile)
 			.pipe(unzip.Parse())
 			.on('entry', function(entry) {
-				var fileName = path.basename(entry.path);
-				var type = entry.type; // 'Directory' or 'File'
+				const fileName = path.basename(entry.path);
+				const type = entry.type; // 'Directory' or 'File'
 				if (type.toLowerCase() === 'file' && path.extname(fileName) === '.csv') {
 					entry.pipe(fs.createWriteStream(path.join(tmpPath, fileName)));
 				} else {
@@ -178,9 +178,9 @@ function extract(tmpFile, tmpFileName, database, cb) {
 }
 
 function processCountryData(src, dest, cb) {
-	var lines=0;
+	let lines=0;
 	function processLine(line) {
-		var fields = CSVtoArray(line);
+		const fields = CSVtoArray(line);
 
 		if (!fields || fields.length < 6) {
 			console.log("weird line: %s::", line);
@@ -188,12 +188,12 @@ function processCountryData(src, dest, cb) {
 		}
 		lines++;
 
-		var sip;
-		var eip;
-		var cc = fields[4].replace(/"/g, '');
-		var b;
-		var bsz;
-		var i;
+		let sip;
+		let eip;
+		const cc = fields[4].replace(/"/g, '');
+		let b;
+		let bsz;
+		let i;
 
 		if (fields[0].match(/:/)) {
 			// IPv6
@@ -231,15 +231,15 @@ function processCountryData(src, dest, cb) {
 		}
 	}
 
-	var dataFile = path.join(dataPath, dest);
-	var tmpDataFile = path.join(tmpPath, src);
+	const dataFile = path.join(dataPath, dest);
+	const tmpDataFile = path.join(tmpPath, src);
 
 	rimraf(dataFile);
 	mkdir(dataFile);
 
 	process.stdout.write('Processing Data (may take a moment) ...');
-	var tstart = Date.now();
-	var datFile = fs.openSync(dataFile, "w");
+	let tstart = Date.now();
+	const datFile = fs.openSync(dataFile, "w");
 
 	lazy(fs.createReadStream(tmpDataFile))
 		.lines
@@ -255,32 +255,32 @@ function processCountryData(src, dest, cb) {
 }
 
 function processCityData(src, dest, cb) {
-	var lines = 0;
+	let lines = 0;
 	function processLine(line) {
 		if (line.match(/^Copyright/) || !line.match(/\d/)) {
 			return;
 		}
 
-		var fields = CSVtoArray(line);
-		var sip;
-		var eip;
-		var locId;
-		var b;
-		var bsz;
+		const fields = CSVtoArray(line);
+		let sip;
+		let eip;
+		let locId;
+		let b;
+		let bsz;
 
-		var i;
+		let i;
 
 		lines++;
 
 		if (fields[0].match(/:/)) {
 			// IPv6
-			var offset = 0;
+			let offset = 0;
 
-			var cc = fields[4];
-			var city = fields[6];
-			var lat = Math.round(parseFloat(fields[7]) * 10000);
-			var lon = Math.round(parseFloat(fields[8]) * 10000);
-			var rg = fields[5];
+			const cc = fields[4];
+			const city = fields[6];
+			const lat = Math.round(parseFloat(fields[7]) * 10000);
+			const lon = Math.round(parseFloat(fields[8]) * 10000);
+			const rg = fields[5];
 
 			bsz = 58;
 			sip = utils.aton6(fields[0]);
@@ -326,14 +326,14 @@ function processCityData(src, dest, cb) {
 		}
 	}
 
-	var dataFile = path.join(dataPath, dest);
-	var tmpDataFile = path.join(tmpPath, src);
+	const dataFile = path.join(dataPath, dest);
+	const tmpDataFile = path.join(tmpPath, src);
 
 	rimraf(dataFile);
 
 	process.stdout.write('Processing Data (may take a moment) ...');
-	var tstart = Date.now();
-	var datFile = fs.openSync(dataFile, "w");
+	let tstart = Date.now();
+	const datFile = fs.openSync(dataFile, "w");
 
 	lazy(fs.createReadStream(tmpDataFile))
 		.lines
@@ -346,16 +346,16 @@ function processCityData(src, dest, cb) {
 }
 
 function processCityDataNames(src, dest, cb) {
-	var locId = null;
+	let locId = null;
 
 	function processLine(line, i, a) {
 		if (line.match(/^Copyright/) || !line.match(/\d/)) {
 			return;
 		}
 
-		var b;
-		var sz = 64;
-		var fields = CSVtoArray(line);
+		let b;
+		const sz = 64;
+		const fields = CSVtoArray(line);
 		if (locId === null)
 			locId = parseInt(fields[0]);
 		else {
@@ -366,13 +366,13 @@ function processCityDataNames(src, dest, cb) {
 			}
 			locId = parseInt(fields[0]);
 		}
-		var cc = fields[1];
-		var rg = fields[2];
-		var city = fields[3];
-		var zip = parseInt(fields[4]);
-		var lat = Math.round(parseFloat(fields[5]) * 10000);
-		var lon = Math.round(parseFloat(fields[6]) * 10000);
-		var metro = parseInt(fields[7]);
+		const cc = fields[1];
+		const rg = fields[2];
+		const city = fields[3];
+		const zip = parseInt(fields[4]);
+		const lat = Math.round(parseFloat(fields[5]) * 10000);
+		const lon = Math.round(parseFloat(fields[6]) * 10000);
+		const metro = parseInt(fields[7]);
 
 		b = new Buffer(sz);
 		b.fill(0);
@@ -394,12 +394,12 @@ function processCityDataNames(src, dest, cb) {
 		fs.writeSync(datFile, b, 0, b.length, null);
 	}
 
-	var dataFile = path.join(dataPath, dest);
-	var tmpDataFile = path.join(tmpPath, src);
+	const dataFile = path.join(dataPath, dest);
+	const tmpDataFile = path.join(tmpPath, src);
 
 	rimraf(dataFile);
 
-	var datFile = fs.openSync(dataFile, "w");
+	const datFile = fs.openSync(dataFile, "w");
 
 	lazy(fs.createReadStream(tmpDataFile))
 		.lines
@@ -412,9 +412,9 @@ function processCityDataNames(src, dest, cb) {
 }
 
 function processData(database, cb) {
-	var type = database.type;
-	var src = database.src;
-	var dest = database.dest;
+	const type = database.type;
+	const src = database.src;
+	const dest = database.dest;
 
 	if (type === 'country') {
 		processCountryData(src, dest, cb);
@@ -446,7 +446,7 @@ async.eachSeries(databases, function(database, nextDatabase) {
 		process.exit(1);
 	} else {
 		console.log('Successfully Updated Databases from MaxMind.'.green);
-		if (process.argv[2]=='debug') console.log('Notice: temporary files are not deleted for debug purposes.'.bold.yellow);
+		if (process.argv[2] === 'debug') console.log('Notice: temporary files are not deleted for debug purposes.'.bold.yellow);
 		else rimraf(tmpPath);
 		process.exit(0);
 	}
